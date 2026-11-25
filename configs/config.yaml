@@ -1,0 +1,17 @@
+data:
+  uci_id: 45
+  path: data/heart_disease.csv
+  target: target
+  min_rows: 250
+  max_missing_share: 0.05
+  numeric: [age, trestbps, chol, thalach, oldpeak]
+  categorical: [sex, cp, fbs, restecg, exang, slope, ca, thal]
+mlflow:
+  experiment: heart-disease-prediction
+# tracking_uri: http://127.0.0.1:5000
+model:
+  type: random_forest
+  n_estimators: 200
+  max_depth: 10
+  test_size: 0.2
+  random_state: 42
