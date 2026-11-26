@@ -55,8 +55,8 @@ with a few missing values in `ca` and `thal`.
 Requires Python 3.12.
 
 ```bash
-git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>
+git clone https://github.com/Melkaye/MLOps-pipeline.git
+cd MLOps-pipeline
 
 python3.12 -m venv .venv
 source .venv/bin/activate
@@ -68,7 +68,7 @@ Get the data with either option:
 
 ```bash
 dvc pull                         # if you have access to the DVC remote
-python src/download_data.py      # otherwise, download from UCI (needs internet)
+python src/download_data.py      # otherwise, download from UCI
 ```
 
 If the download fails with `CERTIFICATE_VERIFY_FAILED` on macOS, run
@@ -183,7 +183,3 @@ measure real production drift.
 | `No module named 'preprocessing'` in pytest | Run `python -m pytest` from the project root with `pytest.ini` present |
 | `Address already in use` on port 5000 | Another MLflow server is running; stop it or use `--port 5001` |
 | `analyze.py` says the experiment is not found | Check that the experiment name and tracking URI match `configs/config.yaml` |
-
-## License
-
-Add a license here (for example MIT) or remove this section. What the project is, how to set it up, how to run training, and how to run tests.
