@@ -1,3 +1,4 @@
+import sys
 import json
 import os
 
@@ -147,6 +148,27 @@ def run_experiment(cfg):
 
         return run.info.run_id
 
+def check_thresholds(metrics, thresholds):
+    """Return a list of failure messages; an empty list means all thresholds are met."""
+    failures = []
+    for name, minimum in thresholds.items():
+        value = metrics.get(name)
+        if value is None:
+            failures.append(f"{name}: metric was not logged")
+        elif value < minimum:
+            failures.append(f"{name}={value:.4f} is below the required {minimum}")
+    return failures
+
 
 if __name__ == "__main__":
-    run_experiment(load_config())
+    cfg = load_config()
+    run_id = run_experiment(cfg)
+
+    metrics = mlflow.get_run(run_id).data.metrics
+    failures = check_thresholds(metrics, cfg.get("thresholds", {}))
+    if failures:
+        print("\nPERFORMANCE CHECK FAILED:")
+        for message in failures:
+            print(f"  - {message}")
+        sys.exit(1)
+    print("\nPerformance check passed: all thresholds met.")

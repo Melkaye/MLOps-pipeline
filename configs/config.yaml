@@ -8,10 +8,14 @@ data:
   categorical: [sex, cp, fbs, restecg, exang, slope, ca, thal]
 mlflow:
   experiment: heart_disease_prediction
- # tracking_uri: http://127.0.0.1:5000
+  tracking_uri: http://127.0.0.1:5000
 model:
   type: random_forest
   n_estimators: 200
   max_depth: 10
   test_size: 0.2
   random_state: 42
+thresholds:
+  accuracy: 0.70
+  f1_score: 0.70
+  auc_roc: 0.80
