@@ -19,3 +19,5 @@ thresholds:
   accuracy: 0.70
   f1_score: 0.70
   auc_roc: 0.80
+drift:
+  threshold: 0.40

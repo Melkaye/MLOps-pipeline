@@ -5,7 +5,6 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch:       # optional manual trigger; delete if you want only push and PR
 
 permissions:
   contents: read
@@ -64,24 +63,39 @@ jobs:
       - name: Train model and check performance thresholds
         run: python src/train.py        # exits non-zero if a threshold is not met
 
-      - name: Prepare drift check data
+  monitor-drift:
+    name: Monitor data drift
+    needs: test            # runs in parallel with train, only after tests pass
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
         run: |
-          python - <<'EOF'
-          import pandas as pd
-          df = pd.read_csv("data/heart_disease.csv")
-          reference = df.sample(frac=0.7, random_state=1)
-          current = df.drop(reference.index)
-          reference.to_csv("data/reference.csv", index=False)
-          current.to_csv("data/current.csv", index=False)
-          EOF
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Check drift
-        run: python src/drift_check.py data/reference.csv data/current.csv
+      - name: Download data
+        run: python src/download_data.py
 
-      - name: Upload reports
-        if: always()
+      - name: Prepare reference and current data
+        run: python src/make_drift_data.py
+
+      - name: Run drift detection
+        run: python src/monitor_drift.py   # exits 1 if drift share exceeds the threshold
+
+      - name: Upload drift reports
+        if: always()                        # keep the report even when drift fails the job
         uses: actions/upload-artifact@v5
         with:
-          name: pipeline-reports
+          name: drift-reports
           path: reports/
           if-no-files-found: ignore
