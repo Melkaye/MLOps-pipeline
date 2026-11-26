@@ -105,7 +105,7 @@ def run_experiment(config):
     """Run a single experiment with the given config, tracked by MLflow."""
 
     # Set the experiment name so all runs are grouped together
-    mlflow.set_experiment("hearth_diseasexxstudent-dropout-prediction")
+    mlflow.set_experiment("heart_disease_prediction")
 
     # Start an MLflow run
     with mlflow.start_run():

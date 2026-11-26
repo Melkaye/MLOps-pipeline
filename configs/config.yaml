@@ -7,7 +7,7 @@ data:
   numeric: [age, trestbps, chol, thalach, oldpeak]
   categorical: [sex, cp, fbs, restecg, exang, slope, ca, thal]
 mlflow:
-  experiment: heart-disease-prediction
+  experiment: heart_disease_prediction
  # tracking_uri: http://127.0.0.1:5000
 model:
   type: random_forest
