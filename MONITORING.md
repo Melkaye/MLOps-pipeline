@@ -53,9 +53,6 @@ should be confirmed by comparing metrics on both sets if the situation changes.
 
 - Retraining is not recommeded. Retraining on a chance flag would add cost with no
   expected benefit.
-- Do a quick investigation of `slope` by opening the report and checking
-  that the p-value is only marginally below 0.05 and that the category
-  proportions differ only slightly.
 - Keep the 40% share threshold. A single flagged feature is a note, and
   the gate is meant to catch broad shifts (about 6 or more of 13 features).
 
