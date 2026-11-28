@@ -28,14 +28,14 @@ with a few missing values in `ca` and `thal`.
 ├── .github/workflows/mlops-pipeline.yml   # CI/CD workflow
 ├── configs/config.yaml                    # data, model, MLflow, threshold and drift settings
 ├── data/                                  # heart_disease.csv (tracked by DVC, not in Git)
-├── reports/                               # generated drift reports (not in Git)
+├── reports/                               # generated drift reports and best_model.json (not in Git)
 ├── src/
 │   ├── download_data.py                   # fetch the dataset from UCI
 │   ├── validate_data.py                   # data quality gate
 │   ├── preprocessing.py                   # cleaning, encoding and quality helpers
 │   ├── train.py                           # train, log to MLflow, check thresholds
 │   ├── sweep.py                           # run multiple experiments
-│   ├── analyze.py                         # rank runs by metric
+│   ├── compare_experiments.py             # rank runs, select and tag the best model
 │   ├── make_drift_data.py                 # build reference and current datasets
 │   └── monitor_drift.py                   # Evidently drift detection
 ├── tests/
@@ -45,7 +45,9 @@ with a few missing values in `ca` and `thal`.
 │   ├── test_data_validation.py
 │   ├── test_model_validation.py
 │   └── test_thresholds.py
+├── .gitignore
 ├── MONITORING.md                          # written drift analysis
+├── README.md
 ├── pytest.ini
 └── requirements.txt
 ```
@@ -105,9 +107,52 @@ mlflow server \
 python src/validate_data.py
 python src/train.py
 
-# 3. Compare experiments (optional)
-python src/sweep.py
-python src/analyze.py
+## 3. Comparing models and selecting the best one
+
+Every training run is logged to MLflow with its parameters and metrics.
+`src/compare_experiments.py` ranks the finished runs and selects the best model.
+
+**Prerequisites:** the MLflow server is running (see "Running the pipeline") and
+at least one finished run exists in the experiment named in `configs/config.yaml`.
+
+```bash
+python src/sweep.py                 # run multiple experiments
+python src/compare_experiments.py   # compare them and select the best model
+```
+
+**What it does**
+
+1. Reads the experiment name and tracking URI from `configs/config.yaml`
+   (`MLFLOW_TRACKING_URI` overrides the URI).
+2. Takes all finished runs and ranks them by F1 score.
+3. Prints the top 5 runs with their model type, F1, accuracy and AUC-ROC.
+4. Selects the top run as the best model and prints its run ID and metrics.
+5. Tags that run `best_model = true` in MLflow (visible in the UI) and saves its run ID,
+   model URI and metrics to `reports/best_model.json`.
+6. Prints the mean, best and run count of the metric for each model type.
+
+To rank by a different metric, change the `METRIC` constant at the top of
+`src/compare_experiments.py` (`accuracy`, `precision`, `recall`, `f1_score` or `auc_roc`).
+
+**Using the selected model**
+
+```python
+import mlflow
+mlflow.set_tracking_uri("http://127.0.0.1:5000")
+
+model = mlflow.sklearn.load_model("runs:/<run_id>/model")   # run_id from reports/best_model.json
+```
+
+The models are saved in the `skops` format. If loading raises an "untrusted types" error,
+load with `skops.io.load(..., trusted=skops.io.get_untrusted_types(file=...))`, but only
+for models you trained yourself.
+
+**Choosing the metric:** decide it before looking at results. For a medical screening
+task, recall or AUC-ROC is often more meaningful than F1 or accuracy, because missing a
+true case costs more than a false alarm. The test set is small (about 60 rows), so
+differences of a point or two between runs are within noise, and the winner's scores are
+slightly optimistic because it was picked as the best of many on the same split.
+
 
 # 4. Drift monitoring
 python src/make_drift_data.py
